@@ -56,7 +56,13 @@
         <tbody>
             <!-- User rows will be inserted here by AJAX -->
         </tbody>
+        
     </table>
+    <div id="pagination">
+    <button id="prevPage">Previous</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage">Next</button>
+</div>
 </body>
 
 </html>

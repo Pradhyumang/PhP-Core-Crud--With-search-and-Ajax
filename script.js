@@ -1,41 +1,77 @@
 $(document).ready(function () {
-  function loadUsers(searchQuery ='') {
-    const action= searchQuery?"search":"read";
+  let currentPage = 1; // Initialize current page
+  const rowsPerPage = 3; // Rows per page
+
+  function loadUsers(searchQuery = '', page = 1) {
+    const action = searchQuery ? "search" : "read";
     $.ajax({
       url: "server.php",
       type: "POST",
-      data: { action: `${action}` ,query: searchQuery},
+      data: { action: `${action}`, query: searchQuery, page: page },
       success: function (response) {
-        const users = JSON.parse(response);
+        const data = JSON.parse(response);
+        const users = data.users;
+        const totalPages = data.totalPages;
+
         let html = "";
-        if(users==="No users found"){
-         html="No users found";
-         $("#userTable tbody").html(html);
-          return
+        if (users === "No users found") {
+          html = "No users found";
+          $("#userTable tbody").html(html);
+          return;
         }
+        
         users.forEach((user) => {
           html += `<tr>
-                        <td>${user.id}</td>
-                        <td>${user.first_name}</td>
-                        <td>${user.last_name}</td>
-                        <td>${user.phone_no}</td>
-                        <td>${user.email}</td>
-                        <td>${user.user_role}</td>
-                        <td><button onclick="editUser(${user.id}, '${user.first_name}', '${user.last_name}',${user.phone_no}, '${user.email}','${user.user_role}')">Edit</button></td>
-                        <td><button onclick="deleteUser(${user.id})">Delete</button></td>
-                    </tr>`;
+                    <td>${user.id}</td>
+                    <td>${user.first_name}</td>
+                    <td>${user.last_name}</td>
+                    <td>${user.phone_no}</td>
+                    <td>${user.email}</td>
+                    <td>${user.user_role}</td>
+                    <td><button onclick="editUser(${user.id}, '${user.first_name}', '${user.last_name}',${user.phone_no}, '${user.email}','${user.user_role}')">Edit</button></td>
+                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                </tr>`;
         });
         $("#userTable tbody").html(html);
-      },
+
+        // Update pagination controls
+        $("#pageInfo").text(`Page ${page} of ${totalPages}`);
+
+        if (page === 1) {
+          $("#prevPage").prop("disabled", true);
+        } else {
+          $("#prevPage").prop("disabled", false);
+        }
+
+        if (page === totalPages) {
+          $("#nextPage").prop("disabled", true);
+        } else {
+          $("#nextPage").prop("disabled", false);
+        }
+      }
     });
   }
 
   loadUsers();
 
+  // Pagination button click events
+  $("#prevPage").on("click", function () {
+    if (currentPage > 1) {
+      currentPage--;
+      loadUsers($("#search").val(), currentPage);
+    }
+  });
+
+  $("#nextPage").on("click", function () {
+    currentPage++;
+    loadUsers($("#search").val(), currentPage);
+  });
+
+  // Search button click
   $("#searchButton").on("click", function () {
-    const searchQuery = $("#search").val(); 
-    // console.log(searchQuery);
-    loadUsers(searchQuery); 
+    const searchQuery = $("#search").val();
+    currentPage = 1; // Reset to first page on search
+    loadUsers(searchQuery, currentPage);
   });
 
   $(document).on("submit", "#createForm, #updateForm", function (e) {
